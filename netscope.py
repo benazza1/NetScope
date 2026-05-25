@@ -1,122 +1,113 @@
-import random
-import time
+#!/usr/bin/env python3
 import sys
-import os
+import socket
+import requests
+import time
 
-# colors
-CYAN = "\033[96m"
-GREEN = "\033[92m"
-YELLOW = "\033[93m"
-RED = "\033[91m"
-RESET = "\033[0m"
+# =========================
+# 🎨 LOGO
+# =========================
+BANNER = """
+███╗   ██╗███████╗████████╗███████╗ ██████╗ ██████╗ ███████╗
+████╗  ██║██╔════╝╚══██╔══╝██╔════╝██╔═══██╗██╔══██╗██╔════╝
+██╔██╗ ██║█████╗     ██║   ███████╗██║   ██║██████╔╝█████╗  
+██║╚██╗██║██╔══╝     ██║   ╚════██║██║   ██║██╔═══╝ ██╔══╝  
+██║ ╚████║███████╗   ██║   ███████║╚██████╔╝██║     ███████╗
+╚═╝  ╚═══╝╚══════╝   ╚═╝   ╚══════╝ ╚═════╝ ╚═╝     ╚══════╝
 
-# counters
-dns_count = 0
-http_count = 0
-tcp_count = 0
-
-# fake data
-fake_domains = [
-    "google.com",
-    "cloudflare.com",
-    "github.com",
-    "openai.com",
-    "youtube.com"
-]
-
-fake_protocols = ["DNS", "HTTP", "TCP"]
-
-fake_ips = [
-    "8.8.8.8",
-    "1.1.1.1",
-    "142.250.190.78",
-    "172.217.16.142"
-]
-
-# banner
-banner = f"""
-{CYAN}
-🔥 NETSCOPE PRO v1.2
-Simple Network Analyzer Simulator
-{RESET}
+        NetScope v1.0 - Real Network Recon Tool
 """
 
+# =========================
+# HELP MENU
+# =========================
 def help_menu():
-    print(f"""
-{GREEN}Usage:{RESET}
-  python3 netscope.py           Run analysis
-  python3 netscope.py live      Live mode (slower output)
-  python3 netscope.py DNS       Filter DNS only
-  python3 netscope.py HTTP      Filter HTTP only
-  python3 netscope.py TCP       Filter TCP only
-  python3 netscope.py --help    Help menu
+    print("""
+Usage:
+  python3 netscope.py dns <domain>     Resolve DNS
+  python3 netscope.py http <url>       Get HTTP headers
+  python3 netscope.py scan <ip>        Port scanning
+  python3 netscope.py live <domain>    Live monitoring
+  python3 netscope.py --help          Help menu
 """)
 
-# help
-if len(sys.argv) > 1 and sys.argv[1] == "--help":
-    print(banner)
-    help_menu()
-    sys.exit()
+# =========================
+# DNS
+# =========================
+def dns_lookup(domain):
+    try:
+        ip = socket.gethostbyname(domain)
+        print(f"[DNS] {domain} -> {ip}")
+    except Exception as e:
+        print(f"[ERROR DNS] {e}")
 
-print(banner)
+# =========================
+# HTTP HEADERS
+# =========================
+def http_headers(url):
+    try:
+        r = requests.get(url)
+        print("\n[HTTP HEADERS]")
+        for k, v in r.headers.items():
+            print(f"{k}: {v}")
+    except Exception as e:
+        print(f"[ERROR HTTP] {e}")
 
-# mode detection
-live_mode = False
-filter_proto = None
+# =========================
+# PORT SCANNER
+# =========================
+def port_scan(ip):
+    print(f"\n[SCAN] Scanning {ip} ...")
+    ports = [21, 22, 80, 443, 3306, 8080]
 
-if len(sys.argv) > 1:
-    arg = sys.argv[1].upper()
+    for port in ports:
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(0.5)
+        result = s.connect_ex((ip, port))
 
-    if arg == "LIVE":
-        live_mode = True
+        if result == 0:
+            print(f"[OPEN] Port {port}")
+        s.close()
+
+# =========================
+# LIVE MODE
+# =========================
+def live_mode(domain):
+    print(f"\n[LIVE MODE] Monitoring {domain}...\n")
+    for i in range(5):
+        try:
+            ip = socket.gethostbyname(domain)
+            print(f"[{i+1}] {domain} -> {ip}")
+        except:
+            print("Error resolving domain")
+        time.sleep(1)
+
+# =========================
+# MAIN
+# =========================
+def main():
+    print(BANNER)
+
+    if len(sys.argv) < 2 or sys.argv[1] == "--help":
+        help_menu()
+        return
+
+    cmd = sys.argv[1].lower()
+
+    if cmd == "dns":
+        dns_lookup(sys.argv[2])
+
+    elif cmd == "http":
+        http_headers(sys.argv[2])
+
+    elif cmd == "scan":
+        port_scan(sys.argv[2])
+
+    elif cmd == "live":
+        live_mode(sys.argv[2])
+
     else:
-        filter_proto = arg
+        print("Unknown command. Use --help")
 
-# generate fake packets
-packets = []
-
-for _ in range(10):
-    src = "192.168.1.10"
-    dst = random.choice(fake_ips)
-    proto = random.choice(fake_protocols)
-    data = random.choice(fake_domains)
-
-    packets.append(f"{src} -> {dst} | {proto} | {data}")
-
-# analysis
-print("=" * 60)
-
-for i, p in enumerate(packets, start=1):
-
-    src, rest = p.split(" -> ")
-    dst, proto, data = rest.split(" | ")
-
-    if filter_proto and proto.upper() != filter_proto:
-        continue
-
-    if proto == "DNS":
-        dns_count += 1
-        color = CYAN
-    elif proto == "HTTP":
-        http_count += 1
-        color = GREEN
-    else:
-        tcp_count += 1
-        color = YELLOW
-
-    print(f"{color}[{i}] PACKET{RESET}")
-    print(f"SRC   : {src}")
-    print(f"DST   : {dst}")
-    print(f"PROTO : {proto}")
-    print(f"DATA  : {data}")
-    print("-" * 50)
-
-    time.sleep(1 if live_mode else 0.3)
-
-# summary
-print(f"\n{CYAN}📊 SUMMARY{RESET}")
-print(f"DNS  : {dns_count}")
-print(f"HTTP : {http_count}")
-print(f"TCP  : {tcp_count}")
-
-print(f"\n{GREEN}✔ Analysis Complete 🚀{RESET}")
+if __name__ == "__main__":
+    main()
