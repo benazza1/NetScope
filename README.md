@@ -1,31 +1,34 @@
-# NetScope 🔥
+# NetScope PRO v2.0
 
-NetScope is a lightweight terminal-based network analyzer simulator written in Python.
+Lightweight Network Analysis & Learning Tool (CLI)
 
 ## Features
-- Packet analysis simulation
-- DNS / HTTP / TCP filters
-- Colored terminal output
-- Packet statistics
-- Lightweight and beginner-friendly
+- View network neighbors (ip neigh)
+- Packet simulation
+- Network statistics
+- Device discovery (LAN)
+- Simple CLI interface
 
-## Usage
+## Commands
 
-Run full analysis:
+- help → Show commands
+- about → About tool
+- scan → Demo packet scan
+- stats → Statistics
+- devices → Network devices
+- clear → Clear screen
+- exit → Exit tool
+
+## Installation
 
 ```bash
 python3 netscope.py
-__________________________________________________________
 
-Filter DNS packets:
-
-python3 netscope.py DNS
-
-Show help menu:
-
-python3 netscope.py --help
-
-Requirements
-Python 3
+Files
+netscope.py → Main program
+packets.txt → Sample data
+install.sh → Optional installer
 Author
 Mohamed
+Version
+2.0 Stable
